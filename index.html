@@ -2513,10 +2513,21 @@ function convertSheetUrl(url){
 }
 
 function parseSheetCSV(text){
-  const lines=text.trim().split('\n');
+  // Parse CSV handling quoted newlines in headers
+  const lines=[];let _c='',_q=false;
+  for(let _i=0;_i<text.length;_i++){
+    const _ch=text[_i];
+    if(_ch==='"')_q=!_q;
+    if((_ch==='\n'||_ch==='\r')&&!_q){
+      if(_ch==='\r'&&text[_i+1]==='\n')_i++;
+      if(_c.trim())lines.push(_c);
+      _c='';
+    }else _c+=_ch;
+  }
+  if(_c.trim())lines.push(_c);
   if(lines.length<2)return[];
   const parseL=line=>{const res=[];let cur='',inQ=false;for(let i=0;i<line.length;i++){if(line[i]==='"'&&!inQ)inQ=true;else if(line[i]==='"'&&inQ)inQ=false;else if(line[i]===','&&!inQ){res.push(cur.trim());cur='';}else cur+=line[i];}res.push(cur.trim());return res;};
-  const hdrs=parseL(lines[0]).map(h=>h.replace(/"/g,'').trim());
+  const hdrs=parseL(lines[0]).map(h=>h.replace(/"/g,'').replace(/\n/g,' ').replace(/\r/g,'').replace(/  +/g,' ').trim());
   const sm={A:'A Series',K:'K Series',F:'F Series',Reno:'Reno Series',Find:'Find Series'};
   const cl=v=>{if(!v||v==='null'||v==='-')return'';return String(v).replace(/"/g,'').trim();};
   const parseKsp=str=>{if(!str)return[];return String(str).replace(/\n/g,' ').split(/\d+[\.:] */).filter(k=>k.trim().length>2).map(k=>k.trim());};
@@ -2703,7 +2714,7 @@ async function pubSync(url){
   for(const p of px){
     try{
       const r=await fetch(p,{headers:{'x-requested-with':'XMLHttpRequest'},signal:AbortSignal.timeout(8000)});
-      if(r.ok){const buf=await r.arrayBuffer();const t=new TextDecoder('utf-8').decode(buf);if(t.includes(',')&&t.includes('\n')&&t.length>100){csv=t;break;}}
+      if(r.ok){const _buf=await r.arrayBuffer();const t=new TextDecoder('utf-8').decode(_buf);if(t.includes(',')&&t.includes('\n')&&t.length>100){csv=t;break;}}
     }catch(e){}
   }
   const el=document.getElementById('last-updated');
@@ -2752,7 +2763,7 @@ updR('lbl-min','r-min'); updR('lbl-max','r-max');
 // Restore saved Image Sheet URL
 // Public: always auto-sync fresh from Google Sheets
 (function(){
-  pubSync('https://docs.google.com/spreadsheets/d/1B5vQGv-b-bd-r8sZ6_t6DoIr9tF9r2hRlFkPxnpa5Hs/export?format=csv&gid=1971005599');
+  pubSync('https://docs.google.com/spreadsheets/d/1B5vQGv-b-bd-r8sZ6_t6DoIr9tF9r2hRlFkPxnpa5Hs/gviz/tq?tqx=out:csv&sheet=Sheet1');
 })();
 // Restore last update date
 try{
