@@ -2595,7 +2595,7 @@ function parseSheetCSV(text){
     if(mop>=60000)badges.push('New Model');
     if(cb>0&&emi>0)badges.push('Top Offer');
     if(remarks==='Best Seller')badges.push('Best Seller');
-    const zdp=cl(row['Zero Down Payment Tenures'])||cl(row['Zero Down Payment Tenures \non selected financer'])||'';
+    const zdp=cl(row['Zero Down Payment Tenures'])||cl(row['Zero Down Payment Tenures on selected financer'])||cl(row['Zero Down Payment Tenures \non selected financer'])||'';
     let imgUrl=cl(row['Image URL'])||cl(row['ImageURL'])||'';
     if(imgUrl){
       const mf2=imgUrl.match(/\/file\/d\/([^\/]+)/);
